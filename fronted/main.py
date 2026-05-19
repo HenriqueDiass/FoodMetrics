@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração da página
+
 st.set_page_config(page_title="FoodMetrics - Painel", page_icon="📊", layout="wide")
 
 st.title("📊 Painel do Restaurante")
 st.write("Resumo diário do controle de desperdício.")
 
-# Criando cards de métricas (parecido com os blocos da sua imagem de referência)
+
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Desperdiçado Hoje", "12.5 kg", "-1.2 kg")
 col2.metric("Prejuízo Estimado", "R$ 150,00", "-R$ 20,00")
@@ -17,7 +17,7 @@ st.divider()
 
 st.subheader("📋 Últimos Registros")
 
-# Dados fakes apenas para não ficar vazio na apresentação de hoje
+
 dados_mock = pd.DataFrame({
     "Data": ["19/05/2026", "19/05/2026", "18/05/2026"],
     "Produto": ["Arroz Branco", "Carne Bovina", "Salada"],
@@ -25,8 +25,8 @@ dados_mock = pd.DataFrame({
     "Motivo": ["Sobras da rampa", "Queima", "Vencimento"]
 })
 
-# Exibe a tabela bonitona
+
 st.dataframe(dados_mock, use_container_width=True, hide_index=True)
 
-# Simulando o erro de backend que o professor pediu
+
 st.error("🚨 Erro de Conexão: Backend offline. Exibindo dados locais.")
