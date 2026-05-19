@@ -6,7 +6,7 @@ st.set_page_config(page_title="Registrar Desperdício", page_icon="⚖️")
 st.title("⚖️ Registrar Desperdício")
 st.write("Preencha os dados abaixo para registrar uma nova perda de insumo.")
 
-# Criando um formulário organizado
+
 with st.form("form_registro"):
     col1, col2 = st.columns(2)
     
@@ -20,13 +20,13 @@ with st.form("form_registro"):
         
     observacao = st.text_area("Observações Adicionais (Opcional)")
     
-    # Botão de salvar
+    
     submit = st.form_submit_button("Salvar Registro", type="primary")
     
     if submit:
-        # Tratamento de erros do frontend (Regra do Professor)
+        
         try:
-            # Tenta mandar pro backend fantasma
+            
             resposta = requests.post("http://localhost:8000/api", timeout=1)
         except requests.exceptions.RequestException:
             st.error("🚨 Falha ao salvar: O servidor backend não está respondendo.")
