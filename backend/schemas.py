@@ -1,20 +1,54 @@
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
+from datetime import datetime
 
 class ComidaCreate(BaseModel):
-    nome:    str
-    descricao: str = "desc"
-    preco: float
+    nome:           str
+    categoria:      str
+    custo_unitario: float
 
 class ComidaUpdate(BaseModel):
-    nome:    Optional[str]  = None
-    descricao: Optional[str]  = None
-    preco: Optional[float] = None
+    nome:           Optional[str]   = None
+    categoria:      Optional[str]   = None
+    custo_unitario: Optional[float] = None
+    ativo:          Optional[bool]  = None
 
 class ComidaResponse(BaseModel):
-    id:        int
-    nome:    str
-    descricao: str
-    preco: float
+    id:             int
+    nome:           str
+    categoria:      str
+    custo_unitario: float
+    ativo:          bool
+    criado_em:      datetime
+    atualizado_em:  datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+# Schemas para Desperdicio 
+
+class DesperdicioCreate(BaseModel):
+    comida_id:      int
+    quantidade:     float
+    setor:          str
+    motivo:         str
+    observacao:     Optional[str] = None
+
+class DesperdicioUpdate(BaseModel):
+    quantidade:     Optional[float] = None
+    setor:          Optional[str]   = None
+    motivo:         Optional[str]   = None
+    observacao:     Optional[str]   = None
+
+class DesperdicioResponse(BaseModel):
+    id:             int
+    comida_id:      int
+    quantidade:     float
+    setor:          str
+    motivo:         str
+    observacao:     Optional[str]
+    custo_estimado: float
+    criado_em:      datetime
+    
+    comida:         Optional[ComidaResponse] = None
 
     model_config = ConfigDict(from_attributes=True)
