@@ -64,7 +64,6 @@ def buscar_desperdicio(db: Session, desperdicio_id: int):
 
 
 def criar_desperdicio(db: Session, dados: DesperdicioCreate):
-    # Buscar a comida para pegar o custo unitário e calcular o custo total do desperdício
     comida = db.query(Comida).filter(Comida.id == dados.comida_id).first()
     if not comida:
         return None
@@ -90,7 +89,6 @@ def atualizar_desperdicio(db: Session, desperdicio_id: int, dados: DesperdicioUp
     for campo, valor in atualizacoes.items():
         setattr(desperdicio, campo, valor)
     
-    # Se a quantidade mudou, recalcular o custo estimado
     if "quantidade" in atualizacoes:
         comida = db.query(Comida).filter(Comida.id == desperdicio.comida_id).first()
         if comida:

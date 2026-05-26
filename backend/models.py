@@ -13,7 +13,7 @@ class Comida(Base):
     criado_em       = Column(DateTime, server_default=func.now())
     atualizado_em   = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    # Relacionamento: uma comida pode ter vários registros de desperdício
+    
     desperdicios    = relationship("Desperdicio", back_populates="comida")
 
 class Desperdicio(Base):
@@ -28,5 +28,5 @@ class Desperdicio(Base):
     custo_estimado  = Column(Numeric(10, 2), nullable=False) # Valor calculado (quantidade * custo_unitario)
     criado_em       = Column(DateTime, server_default=func.now())
 
-    # Relacionamento: cada desperdício pertence a uma comida
+   
     comida          = relationship("Comida", back_populates="desperdicios")
