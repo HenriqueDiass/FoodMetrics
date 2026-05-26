@@ -24,7 +24,7 @@ O sistema opera sobre três pilares principais:
     ```
 2.  **Frontend:**
     ```bash
-    streamlit run fronted/main.py
+    streamlit run frontend/main.py
     ```
 
 ---

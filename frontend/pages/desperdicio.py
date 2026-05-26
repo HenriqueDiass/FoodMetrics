@@ -1,24 +1,23 @@
 import streamlit as st
 import requests
+from utils import bloqueio_api_offline, exibir_status_sidebar
 
 st.set_page_config(page_title="Registrar Desperdício", page_icon="🗑️")
+exibir_status_sidebar()
+bloqueio_api_offline()
+
 st.title("🗑️ Registrar Desperdício")
 
 API_COMIDAS = "http://127.0.0.1:8000/comidas"
 API_DESPERDICIOS = "http://127.0.0.1:8000/desperdicios"
 
-# Busca as comidas cadastradas no banco
-try:
-    resp_comidas = requests.get(API_COMIDAS)
-    lista_comidas = resp_comidas.json() if resp_comidas.status_code == 200 else []
-except:
-    lista_comidas = []
-    st.error("🚨 Backend offline. Ligue o servidor FastAPI.")
+resp_comidas = requests.get(API_COMIDAS)
+lista_comidas = resp_comidas.json() if resp_comidas.status_code == 200 else []
 
 if not lista_comidas:
     st.warning("⚠️ Cadastre Alimentos na aba 'Comidas' antes de registrar o desperdício!")
 else:
-    # Cria uma lista de opções para o menu dropdown
+    
     opcoes_comidas = {item["nome"]: item["id"] for item in lista_comidas}
 
     with st.form("form_desperdicio"):
@@ -38,11 +37,8 @@ else:
                 "motivo": motivo,
                 "observacao": obs if obs else None
             }
-            try:
-                res = requests.post(API_DESPERDICIOS, json=payload)
-                if res.status_code in [200, 201]:
-                    st.success("✅ Desperdício registrado com sucesso no banco!")
-                else:
-                    st.error("Erro ao registrar.")
-            except:
-                st.error("🚨 Backend offline.")
+            res = requests.post(API_DESPERDICIOS, json=payload)
+            if res.status_code in [200, 201]:
+                st.success("✅ Desperdício registrado com sucesso no banco!")
+            else:
+                st.error("Erro ao registrar.")
