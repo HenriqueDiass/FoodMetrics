@@ -10,9 +10,7 @@ API_COMIDAS = "http://127.0.0.1:8000/comidas"
 # Organizando a tela em abas nativas
 aba_listar, aba_cadastrar, aba_editar = st.tabs(["📋 Listar & Deletar", "➕ Novo Alimento", "✏️ Editar Alimento"])
 
-# ---------------------------------------------------------
-# ABA 1: LISTAR E DELETAR (READ & DELETE)
-# ---------------------------------------------------------
+
 with aba_listar:
     try:
         resp = requests.get(API_COMIDAS)
@@ -46,9 +44,7 @@ with aba_listar:
     except requests.exceptions.RequestException:
         st.error("🚨 Erro ao conectar com o servidor para listar os alimentos.")
 
-# ---------------------------------------------------------
-# ABA 2: CADASTRAR (CREATE)
-# ---------------------------------------------------------
+
 with aba_cadastrar:
     st.subheader("Adicionar novo item ao estoque")
     with st.form("form_comida_nova", clear_on_submit=True):
@@ -70,9 +66,7 @@ with aba_cadastrar:
             except requests.exceptions.RequestException:
                 st.error("🚨 Backend offline. O servidor FastAPI está desligado.")
 
-# ---------------------------------------------------------
-# ABA 3: EDITAR (UPDATE)
-# ---------------------------------------------------------
+
 with aba_editar:
     st.subheader("Modificar um item existente")
     try:
