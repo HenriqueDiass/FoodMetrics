@@ -1,46 +1,34 @@
 import streamlit as st
-import os
-from utils import exibir_status_sidebar
+from utils.login import tela_login
 
+st.set_page_config(page_title="FoodMetrics", page_icon="🍔", layout="wide")
 
-st.set_page_config(
-    page_title="FoodMetrics - Início",
-    layout="wide"
-)
+# 1. Inicializa a "memória" de login
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
 
-api_online = exibir_status_sidebar()
+# 2. Lógica de Roteamento (Navegação)
+if not st.session_state.autenticado:
+    # Se NÃO estiver logado, a única página que o sistema enxerga é a tela de login
+    login_page = st.Page(tela_login, title="Login", icon="🔐")
+    pg = st.navigation([login_page])
 
-PALETA_FOODMETRICS = ["#123258", "#2a91d3", "#53a458", "#50626e"]
-diretorio_atual = os.path.dirname(os.path.abspath(__file__))
-caminho_logo = os.path.join(diretorio_atual, "data", "logo.png")
+else:
+    # Se ESTIVER logado, mapeamos os arquivos da pasta "pages"
+    pg_inicio = st.Page("pages/inicio.py", title="Início", icon="🏠")
+    pg_dash = st.Page("pages/dashboards.py", title="Dashboards", icon="📊")
+    pg_comidas = st.Page("pages/comidas.py", title="Comidas", icon="🍔")
+    pg_desp = st.Page("pages/desperdicio.py", title="Desperdício", icon="🗑️")
+    
+    # Organiza o menu que aparecerá na barra lateral
+    pg = st.navigation([pg_inicio, pg_dash, pg_comidas, pg_desp])
+    
+    # Adiciona um botão de Sair na barra lateral
+    with st.sidebar:
+        st.divider()
+        if st.button("Sair do Sistema", use_container_width=True):
+            st.session_state.autenticado = False
+            st.rerun()
 
-
-
-col1, col2, col3 = st.columns([1, 1, 1])
-with col2:
-    st.image(caminho_logo, use_container_width=True)
-
-st.markdown("<h1 style='text-align: center;'>Gestão Inteligente de Desperdício</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 1.2rem;'>Transformando sobras em economia e sustentabilidade.</p>", unsafe_allow_html=True)
-st.divider()
-
-
-col_a, col_b, col_c = st.columns(3)
-
-with col_a:
-    st.markdown("### 🍔 Comida")
-    st.markdown("Gerencie o cadastro de produtos e seus custos.")
-    if st.button("Acessar Cardápio", use_container_width=True):
-        st.switch_page("pages/comidas.py")
-
-with col_b:
-    st.markdown("### 🗑️ Registro")
-    st.markdown("Lance os desperdícios ocorridos em tempo real.")
-    if st.button("Registrar Perda", use_container_width=True):
-        st.switch_page("pages/desperdicio.py")
-
-with col_c:
-    st.markdown("### 📊 Dashboards")
-    st.markdown("Visualize o impacto financeiro e operacional.")
-    if st.button("Ver Relatórios", use_container_width=True):
-        st.switch_page("pages/dashboards.py")
+# 3. Executa a navegação configurada
+pg.run()
