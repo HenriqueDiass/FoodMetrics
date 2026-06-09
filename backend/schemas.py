@@ -52,3 +52,17 @@ class DesperdicioResponse(BaseModel):
     comida:         Optional[ComidaResponse] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class PaginatedComida(BaseModel):
+    data: list[ComidaResponse]
+    total: int
+    page: int
+    limit: int
+    pages: int
+
+class PaginatedDesperdicio(BaseModel):
+    data: list[DesperdicioResponse]
+    total: int
+    page: int
+    limit: int
+    pages: int

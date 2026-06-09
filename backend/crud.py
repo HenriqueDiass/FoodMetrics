@@ -1,10 +1,28 @@
 from sqlalchemy.orm import Session
 from backend.models import Comida, Desperdicio
 from backend.schemas import ComidaCreate, ComidaUpdate, DesperdicioCreate, DesperdicioUpdate
+import math
 
+def listar_comidas(db: Session, nome: str = None, page: int = 1, limit: int = 10):
+    query = db.query(Comida)
+    if nome:
+        query = query.filter(Comida.nome.ilike(f"%{nome}%"))
+    
+    totalQuery = query.count()
+    if limit > 0:
+        totalPage = math.ceil(totalQuery/limit)
+    else:
+        totalPage = 0
+    pular = (page - 1) * limit
+    dados = query.offset(pular).limit(limit).all()
 
-def listar_comidas(db: Session):
-    return db.query(Comida).all()
+    return {
+        "data": dados,
+        "total": totalQuery,
+        "page": page,
+        "limit": limit,
+        "pages": totalPage
+    }
 
 
 def buscar_comida(db: Session, comida_id: int):
@@ -55,8 +73,26 @@ def deletar_comida(db: Session, comida_id: int):
 
 #  CRUD para Desperdicio 
 
-def listar_desperdicios(db: Session):
-    return db.query(Desperdicio).all()
+def listar_desperdicios(db: Session, setor: str = None, page: int = 1, limit: int = 10):
+    query = db.query(Desperdicio)
+    if setor:
+        query = query.filter(Desperdicio.setor.ilike(f"%{setor}%"))
+    
+    totalQuery = query.count()
+    if limit > 0:
+        totalPage = math.ceil(totalQuery/limit)
+    else:
+        totalPage = 0
+    pular = (page - 1) * limit
+    dados = query.offset(pular).limit(limit).all()
+
+    return {
+        "data": dados,
+        "total": totalQuery,
+        "page": page,
+        "limit": limit,
+        "pages": totalPage
+    }
 
 
 def buscar_desperdicio(db: Session, desperdicio_id: int):

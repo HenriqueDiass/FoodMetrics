@@ -13,10 +13,12 @@ st.title("📊 Dashboard do Restaurante")
 PALETA = ["#123258", "#2a91d3", "#53a458", "#50626e"]
 API_DESPERDICIOS = "http://127.0.0.1:8000/desperdicios"
 
-resposta = requests.get(API_DESPERDICIOS)
+
+resposta = requests.get(API_DESPERDICIOS, params={"limit": 10000})
 
 if resposta.status_code == 200:
-    dados = resposta.json()
+    resultado = resposta.json()
+    dados = resultado["data"] 
     
     if dados:
         df = pd.DataFrame(dados)

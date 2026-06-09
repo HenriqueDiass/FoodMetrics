@@ -14,16 +14,24 @@ aba_listar, aba_cadastrar, aba_editar, aba_deletar = st.tabs(["📋 Listar", "�
 with aba_listar:
     termo_busca = st.text_input("🔍 Buscar alimento por nome (ex: feijao)...").lower()
     
+    # Gerenciar estado da página
+    if "page_comidas" not in st.session_state:
+        st.session_state.page_comidas = 1
+    
+    limit = 10
+    
     try:
-        resp = requests.get(API_COMIDAS)
-        if resp.status_code == 200 and resp.json():
-            comidas = resp.json()
-            df = pd.DataFrame(comidas)
+        params = {"nome": termo_busca, "page": st.session_state.page_comidas, "limit": limit}
+        resp = requests.get(API_COMIDAS, params=params)
+        
+        if resp.status_code == 200:
+            resultado = resp.json()
+            comidas = resultado["data"]
+            total_items = resultado["total"]
+            total_pages = resultado["pages"]
             
-            if termo_busca:
-                df = df[df["nome"].str.lower().str.contains(termo_busca)]
-            
-            if not df.empty:
+            if comidas:
+                df = pd.DataFrame(comidas)
                 df_mostrar = df[["id", "nome", "categoria", "custo_unitario"]].copy()
                 df_mostrar.columns = ["ID", "Nome do Alimento", "Categoria", "Custo (R$)"]
                 
@@ -36,6 +44,28 @@ with aba_listar:
                     use_container_width=True, 
                     hide_index=True
                 )
+                
+            
+                col_voltar, col_info, col_avancar = st.columns([2, 3, 2])
+                
+                with col_voltar:
+                    if st.button("⬅️ Voltar", disabled=st.session_state.page_comidas <= 1, use_container_width=True):
+                        st.session_state.page_comidas -= 1
+                        st.rerun()
+                
+                with col_info:
+                    st.markdown(f"""
+                        <div style='text-align: center; border: 1px solid #e6e9ef; border-radius: 10px; padding: 5px; background-color: #f8f9fb;'>
+                            <small style='color: #6d7a8a; font-size: 12px;'>PÁGINA</small><br>
+                            <strong style='font-size: 20px; color: #123258;'>{st.session_state.page_comidas} <span style='color: #bdc3c7; font-weight: normal;'>/</span> {total_pages}</strong><br>
+                            <small style='color: #6d7a8a; font-size: 11px;'>Total de {total_items} itens</small>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                with col_avancar:
+                    if st.button("Avançar ➡️", disabled=st.session_state.page_comidas >= total_pages, use_container_width=True):
+                        st.session_state.page_comidas += 1
+                        st.rerun()
             else:
                 st.info("Nenhum alimento encontrado na busca.")
         else:
@@ -68,35 +98,40 @@ with aba_cadastrar:
 with aba_editar:
     st.subheader("Modificar um item existente")
     try:
-        resp = requests.get(API_COMIDAS)
-        if resp.status_code == 200 and resp.json():
-            comidas_edit = resp.json()
-            opcoes_comidas = {f"{c['id']} - {c['nome']}": c for c in comidas_edit}
-            comida_selecionada = st.selectbox("Selecione o alimento para editar:", list(opcoes_comidas.keys()))
-            
-            if comida_selecionada:
-                dados_atuais = opcoes_comidas[comida_selecionada]
-                with st.form("form_editar_comida"):
-                    novo_nome = st.text_input("Novo Nome", value=dados_atuais['nome'])
-                    lista_categorias = ["Cozinha Quente", "Cozinha Fria", "Bebidas", "Hortifruti", "Outros"]
-                    idx_cat = lista_categorias.index(dados_atuais['categoria']) if dados_atuais['categoria'] in lista_categorias else 0
-                    nova_cat = st.selectbox("Nova Categoria", lista_categorias, index=idx_cat)
-                    novo_custo = st.number_input("Novo Custo (R$)", min_value=0.1, step=0.5, value=float(dados_atuais['custo_unitario']))
-                    submit_update = st.form_submit_button("Atualizar Alimento", type="primary")
-                    
-                    if submit_update:
-                        payload_up = {"nome": novo_nome, "categoria": nova_cat, "custo_unitario": novo_custo}
-                        try:
-                            res_up = requests.patch(f"{API_COMIDAS}/{dados_atuais['id']}", json=payload_up)
-                            if res_up.status_code == 200:
-                                st.success("✅ Atualizado com sucesso!")
-                                st.rerun()
-                            else:
-                                st.error("Falha ao atualizar.")
-                        except requests.exceptions.RequestException:
-                            st.error("🚨 Erro de conexão.")
+        # Para o selectbox, pegamos todos (ou uma grande quantidade) para facilitar a busca
+        resp = requests.get(API_COMIDAS, params={"limit": 1000})
+        if resp.status_code == 200:
+            resultado_edit = resp.json()
+            comidas_edit = resultado_edit["data"]
+            if comidas_edit:
+                opcoes_comidas = {f"{c['id']} - {c['nome']}": c for c in comidas_edit}
+                comida_selecionada = st.selectbox("Selecione o alimento para editar:", list(opcoes_comidas.keys()))
+                
+                if comida_selecionada:
+                    dados_atuais = opcoes_comidas[comida_selecionada]
+                    with st.form("form_editar_comida"):
+                        novo_nome = st.text_input("Novo Nome", value=dados_atuais['nome'])
+                        lista_categorias = ["Cozinha Quente", "Cozinha Fria", "Bebidas", "Hortifruti", "Outros"]
+                        idx_cat = lista_categorias.index(dados_atuais['categoria']) if dados_atuais['categoria'] in lista_categorias else 0
+                        nova_cat = st.selectbox("Nova Categoria", lista_categorias, index=idx_cat)
+                        novo_custo = st.number_input("Novo Custo (R$)", min_value=0.1, step=0.5, value=float(dados_atuais['custo_unitario']))
+                        submit_update = st.form_submit_button("Atualizar Alimento", type="primary")
+                        
+                        if submit_update:
+                            payload_up = {"nome": novo_nome, "categoria": nova_cat, "custo_unitario": novo_custo}
+                            try:
+                                res_up = requests.patch(f"{API_COMIDAS}/{dados_atuais['id']}", json=payload_up)
+                                if res_up.status_code == 200:
+                                    st.success("✅ Atualizado com sucesso!")
+                                    st.rerun()
+                                else:
+                                    st.error("Falha ao atualizar.")
+                            except requests.exceptions.RequestException:
+                                st.error("🚨 Erro de conexão.")
+            else:
+                st.info("Cadastre um alimento primeiro.")
         else:
-            st.info("Cadastre um alimento primeiro.")
+            st.info("Erro ao buscar dados.")
     except requests.exceptions.RequestException:
         st.error("🚨 Erro ao buscar dados.")
 
@@ -104,28 +139,32 @@ with aba_editar:
 with aba_deletar:
     st.subheader("❌ Remover Alimento do Sistema")
     try:
-        resp = requests.get(API_COMIDAS)
-        if resp.status_code == 200 and resp.json():
-            comidas_del = resp.json()
-            opcoes_del = {f"ID {c['id']} - {c['nome']}": c['id'] for c in comidas_del}
-            
-            col_sel, col_btn = st.columns([3, 1])
-            with col_sel:
-                item_del = st.selectbox("Selecione o alimento que deseja deletar:", list(opcoes_del.keys()), key="del_comida_select")
-            with col_btn:
-                st.write("") 
-                st.write("")
-                if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
-                    try:
-                        res_del = requests.delete(f"{API_COMIDAS}/{opcoes_del[item_del]}")
-                        if res_del.status_code == 204:
-                            st.success("Deletado com sucesso!")
-                            st.rerun()  
-                        else:
-                            st.error("Erro ao deletar. O alimento pode estar vinculado a um registro de desperdício.")
-                    except requests.exceptions.RequestException:
-                        st.error("🚨 Erro de conexão.")
+        resp = requests.get(API_COMIDAS, params={"limit": 1000})
+        if resp.status_code == 200:
+            resultado_del = resp.json()
+            comidas_del = resultado_del["data"]
+            if comidas_del:
+                opcoes_del = {f"ID {c['id']} - {c['nome']}": c['id'] for c in comidas_del}
+                
+                col_sel, col_btn = st.columns([3, 1])
+                with col_sel:
+                    item_del = st.selectbox("Selecione o alimento que deseja deletar:", list(opcoes_del.keys()), key="del_comida_select")
+                with col_btn:
+                    st.write("") 
+                    st.write("")
+                    if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
+                        try:
+                            res_del = requests.delete(f"{API_COMIDAS}/{opcoes_del[item_del]}")
+                            if res_del.status_code == 204:
+                                st.success("Deletado com sucesso!")
+                                st.rerun()  
+                            else:
+                                st.error("Erro ao deletar. O alimento pode estar vinculado a um registro de desperdício.")
+                        except requests.exceptions.RequestException:
+                            st.error("🚨 Erro de conexão.")
+            else:
+                st.info("Nenhum alimento cadastrado para deletar.")
         else:
-            st.info("Nenhum alimento cadastrado para deletar.")
+            st.error("Erro ao buscar dados.")
     except requests.exceptions.RequestException:
         st.error("🚨 Erro ao conectar com o servidor.")

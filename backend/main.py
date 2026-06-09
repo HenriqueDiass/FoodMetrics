@@ -6,8 +6,10 @@ from backend import crud
 from backend.database import Base, engine, get_db
 from backend.schemas import (
     ComidaCreate, ComidaResponse, ComidaUpdate,
-    DesperdicioCreate, DesperdicioResponse, DesperdicioUpdate
+    DesperdicioCreate, DesperdicioResponse, DesperdicioUpdate,
+    PaginatedComida, PaginatedDesperdicio
 )
+from typing import Optional
 
 Base.metadata.create_all(bind=engine)  # cria as tabelas ao iniciar
 
@@ -21,9 +23,9 @@ app.add_middleware(
 )
 
 
-@app.get("/comidas", response_model=list[ComidaResponse])
-def listar(db: Session = Depends(get_db)):
-    return crud.listar_comidas(db)
+@app.get("/comidas", response_model=PaginatedComida)
+def listar(nome: Optional[str] = None, page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
+    return crud.listar_comidas(db, nome=nome, page=page, limit=limit)
 
 
 @app.get("/comidas/{comida_id}", response_model=ComidaResponse)
@@ -66,9 +68,9 @@ def deletar(comida_id: int, db: Session = Depends(get_db)):
 
 # --- Rotas para Desperdicio ---
 
-@app.get("/desperdicios", response_model=list[DesperdicioResponse])
-def listar_desperdicios(db: Session = Depends(get_db)):
-    return crud.listar_desperdicios(db)
+@app.get("/desperdicios", response_model=PaginatedDesperdicio)
+def listar_desperdicios(setor: Optional[str] = None, page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
+    return crud.listar_desperdicios(db, setor=setor, page=page, limit=limit)
 
 
 @app.get("/desperdicios/{desperdicio_id}", response_model=DesperdicioResponse)
