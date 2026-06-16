@@ -55,10 +55,10 @@ with aba_listar:
                 
                 with col_info:
                     st.markdown(f"""
-                        <div style='text-align: center; border: 1px solid #e6e9ef; border-radius: 10px; padding: 5px; background-color: #f8f9fb;'>
-                            <small style='color: #6d7a8a; font-size: 12px;'>PÁGINA</small><br>
-                            <strong style='font-size: 20px; color: #123258;'>{st.session_state.page_comidas} <span style='color: #bdc3c7; font-weight: normal;'>/</span> {total_pages}</strong><br>
-                            <small style='color: #6d7a8a; font-size: 11px;'>Total de {total_items} itens</small>
+                        <div style='text-align: center; border: 1px solid #e6e9ef; border-radius: 8px; padding: 7px; background-color: #f8f9fb;'>
+                            <span style='color: #6d7a8a; font-size: 14px;'>Página <strong style='font-size: 16px; color: #123258;'>{st.session_state.page_comidas}</strong> de {total_pages}</span>
+                            <span style='color: #bdc3c7; margin: 0 10px;'>|</span>
+                            <span style='color: #6d7a8a; font-size: 13px;'>Total de {total_items} itens</span>
                         </div>
                     """, unsafe_allow_html=True)
                 
@@ -85,10 +85,7 @@ with aba_cadastrar:
         if submit_create:
             payload = {"nome": nome, "categoria": categoria, "custo_unitario": custo}
             try:
-                headers = {}
-                if "token" in st.session_state:
-                    headers["Authorization"] = f"Bearer {st.session_state.token}"
-                resp = requests.post(API_COMIDAS, json=payload, headers=headers)
+                resp = requests.post(API_COMIDAS, json=payload)
                 if resp.status_code in [200, 201]:
                     st.success(f"✅ {nome} cadastrado com sucesso!")
                     st.rerun()  
@@ -123,10 +120,7 @@ with aba_editar:
                         if submit_update:
                             payload_up = {"nome": novo_nome, "categoria": nova_cat, "custo_unitario": novo_custo}
                             try:
-                                headers = {}
-                                if "token" in st.session_state:
-                                    headers["Authorization"] = f"Bearer {st.session_state.token}"
-                                res_up = requests.patch(f"{API_COMIDAS}/{dados_atuais['id']}", json=payload_up, headers=headers)
+                                res_up = requests.patch(f"{API_COMIDAS}/{dados_atuais['id']}", json=payload_up)
                                 if res_up.status_code == 200:
                                     st.success("✅ Atualizado com sucesso!")
                                     st.rerun()
@@ -160,10 +154,7 @@ with aba_deletar:
                     st.write("")
                     if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
                         try:
-                            headers = {}
-                            if "token" in st.session_state:
-                                headers["Authorization"] = f"Bearer {st.session_state.token}"
-                            res_del = requests.delete(f"{API_COMIDAS}/{opcoes_del[item_del]}", headers=headers)
+                            res_del = requests.delete(f"{API_COMIDAS}/{opcoes_del[item_del]}")
                             if res_del.status_code == 204:
                                 st.success("Deletado com sucesso!")
                                 st.rerun()  
