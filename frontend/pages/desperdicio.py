@@ -74,12 +74,11 @@ else:
                             st.rerun()
                     
                     with col_info:
-                        # Estilização do contador de páginas (mesmo estilo de comidas.py)
                         st.markdown(f"""
-                            <div style='text-align: center; border: 1px solid #e6e9ef; border-radius: 10px; padding: 5px; background-color: #f8f9fb;'>
-                                <small style='color: #6d7a8a; font-size: 12px;'>PÁGINA</small><br>
-                                <strong style='font-size: 20px; color: #123258;'>{st.session_state.page_desperdicio} <span style='color: #bdc3c7; font-weight: normal;'>/</span> {total_pages}</strong><br>
-                                <small style='color: #6d7a8a; font-size: 11px;'>Total de {total_items} registros</small>
+                            <div style='text-align: center; border: 1px solid #e6e9ef; border-radius: 8px; padding: 7px; background-color: #f8f9fb;'>
+                                <span style='color: #6d7a8a; font-size: 14px;'>Página <strong style='font-size: 16px; color: #123258;'>{st.session_state.page_desperdicio}</strong> de {total_pages}</span>
+                                <span style='color: #bdc3c7; margin: 0 10px;'>|</span>
+                                <span style='color: #6d7a8a; font-size: 13px;'>Total: {total_items} registros</span>
                             </div>
                         """, unsafe_allow_html=True)
                     

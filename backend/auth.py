@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 
 # Configurações básicas (Em produção, use variáveis de ambiente)
-SECRET_KEY = "sua_chave_secreta_super_segura_aqui"
+SECRET_KEY = "123"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
