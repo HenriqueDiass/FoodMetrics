@@ -93,11 +93,24 @@ def tela_login():
                 submitted = st.form_submit_button("Entrar no sistema", use_container_width=True)
                 
                 if submitted:
-                    if usuario == "admin" and senha == "123":
-                        st.session_state.autenticado = True
-                        st.rerun()
-                    else:
-                        st.error("Usuário ou senha incorretos.")
+                    import requests
+                    
+                    try:
+                        # Chama a API de login
+                        response = requests.post(
+                            "http://127.0.0.1:8000/token",
+                            data={"username": usuario, "password": senha}
+                        )
+                        
+                        if response.status_code == 200:
+                            dados = response.json()
+                            st.session_state.autenticado = True
+                            st.session_state.token = dados["access_token"]
+                            st.rerun()
+                        else:
+                            st.error("Usuário ou senha incorretos.")
+                    except requests.exceptions.ConnectionError:
+                        st.error("Não foi possível conectar ao servidor. O backend está rodando?")
     
     st.write("")
     
