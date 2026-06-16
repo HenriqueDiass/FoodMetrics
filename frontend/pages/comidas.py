@@ -85,7 +85,10 @@ with aba_cadastrar:
         if submit_create:
             payload = {"nome": nome, "categoria": categoria, "custo_unitario": custo}
             try:
-                resp = requests.post(API_COMIDAS, json=payload)
+                headers = {}
+                if "token" in st.session_state:
+                    headers["Authorization"] = f"Bearer {st.session_state.token}"
+                resp = requests.post(API_COMIDAS, json=payload, headers=headers)
                 if resp.status_code in [200, 201]:
                     st.success(f"✅ {nome} cadastrado com sucesso!")
                     st.rerun()  
@@ -120,7 +123,10 @@ with aba_editar:
                         if submit_update:
                             payload_up = {"nome": novo_nome, "categoria": nova_cat, "custo_unitario": novo_custo}
                             try:
-                                res_up = requests.patch(f"{API_COMIDAS}/{dados_atuais['id']}", json=payload_up)
+                                headers = {}
+                                if "token" in st.session_state:
+                                    headers["Authorization"] = f"Bearer {st.session_state.token}"
+                                res_up = requests.patch(f"{API_COMIDAS}/{dados_atuais['id']}", json=payload_up, headers=headers)
                                 if res_up.status_code == 200:
                                     st.success("✅ Atualizado com sucesso!")
                                     st.rerun()
@@ -154,7 +160,10 @@ with aba_deletar:
                     st.write("")
                     if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
                         try:
-                            res_del = requests.delete(f"{API_COMIDAS}/{opcoes_del[item_del]}")
+                            headers = {}
+                            if "token" in st.session_state:
+                                headers["Authorization"] = f"Bearer {st.session_state.token}"
+                            res_del = requests.delete(f"{API_COMIDAS}/{opcoes_del[item_del]}", headers=headers)
                             if res_del.status_code == 204:
                                 st.success("Deletado com sucesso!")
                                 st.rerun()  

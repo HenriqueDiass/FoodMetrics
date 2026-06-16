@@ -114,7 +114,10 @@ else:
                     "observacao": obs if obs else None
                 }
                 try:
-                    res = requests.post(API_DESPERDICIOS, json=payload)
+                    headers = {}
+                    if "token" in st.session_state:
+                        headers["Authorization"] = f"Bearer {st.session_state.token}"
+                    res = requests.post(API_DESPERDICIOS, json=payload, headers=headers)
                     if res.status_code in [200, 201]:
                         st.success("✅ Desperdício registrado com sucesso!")
                         st.rerun()
@@ -168,9 +171,12 @@ else:
                                     "observacao": nova_obs if nova_obs else None
                                 }
                                 try:
-                                    res_up = requests.put(f"{API_DESPERDICIOS}/{dados_atuais['id']}", json=payload_up)
+                                    headers = {}
+                                    if "token" in st.session_state:
+                                        headers["Authorization"] = f"Bearer {st.session_state.token}"
+                                    res_up = requests.put(f"{API_DESPERDICIOS}/{dados_atuais['id']}", json=payload_up, headers=headers)
                                     if res_up.status_code == 405:
-                                        res_up = requests.patch(f"{API_DESPERDICIOS}/{dados_atuais['id']}", json=payload_up)
+                                        res_up = requests.patch(f"{API_DESPERDICIOS}/{dados_atuais['id']}", json=payload_up, headers=headers)
                                     
                                     if res_up.status_code in [200, 204]:
                                         st.success("✅ Registro atualizado com sucesso!")
@@ -211,7 +217,10 @@ else:
                         st.write("")
                         if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
                             try:
-                                res_del = requests.delete(f"{API_DESPERDICIOS}/{opcoes_del[item_del]}")
+                                headers = {}
+                                if "token" in st.session_state:
+                                    headers["Authorization"] = f"Bearer {st.session_state.token}"
+                                res_del = requests.delete(f"{API_DESPERDICIOS}/{opcoes_del[item_del]}", headers=headers)
                                 if res_del.status_code in [200, 204]:
                                     st.success("Deletado com sucesso!")
                                     st.rerun()
