@@ -201,35 +201,53 @@ else:
                 desperdicios_del = resultado_del["data"]
                 
                 if desperdicios_del:
-                    # Monta os nomes bonitinhos para selecionar no formato: "ID - Alimento (Xkg no Setor Y)"
                     opcoes_del = {}
                     for d in desperdicios_del:
                         nome_alim = opcoes_comidas_inverso.get(d["comida_id"], "Desconhecido")
                         label = f"ID: {d['id']} - {nome_alim} ({d['quantidade']}kg no {d['setor']})"
-                        opcoes_del[label] = d['id']
+                        opcoes_del[label] = d
                     
                     col_sel, col_btn = st.columns([3, 1])
                     with col_sel:
                         item_del = st.selectbox("Selecione o registro que deseja deletar:", list(opcoes_del.keys()), key="del_desp_select")
+                    
+                    # Definição do Modal de Confirmação Crítica para Desperdício
+                    @st.dialog("Confirmar Exclusão de Registro")
+                    def modal_confirmar_deletar_desperdicio(dados_desp, label_item):
+                        st.warning("⚠️ Esta ação removerá o registro do histórico do dashboard.")
+                        st.write("Tem certeza que deseja apagar o seguinte lançamento?")
+                        st.info(f"**{label_item}**")
+                        
+                        col_modal_cancel, col_modal_conf = st.columns(2)
+                        with col_modal_cancel:
+                            if st.button("Cancelar", use_container_width=True):
+                                st.rerun() # Fecha sem executar
+                        with col_modal_conf:
+                            if st.button("Confirmar Exclusão", type="primary", use_container_width=True):
+                                try:
+                                    headers = {}
+                                    if "token" in st.session_state:
+                                        headers["Authorization"] = f"Bearer {st.session_state.token}"
+                                    
+                                    res_del = requests.delete(f"{API_DESPERDICIOS}/{dados_desp['id']}", headers=headers)
+                                    if res_del.status_code in [200, 204]:
+                                        st.success("✅ Registro deletado com sucesso!")
+                                        st.rerun() # Executa, fecha e recarrega
+                                    else:
+                                        st.error("Erro ao deletar no banco.")
+                                except requests.exceptions.RequestException:
+                                    st.error("🚨 Erro de conexão.")
+
                     with col_btn:
                         st.write("")
                         st.write("")
+                        # O clique aqui apenas invoca o diálogo seguro
                         if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
-                            try:
-                                headers = {}
-                                if "token" in st.session_state:
-                                    headers["Authorization"] = f"Bearer {st.session_state.token}"
-                                res_del = requests.delete(f"{API_DESPERDICIOS}/{opcoes_del[item_del]}", headers=headers)
-                                if res_del.status_code in [200, 204]:
-                                    st.success("Deletado com sucesso!")
-                                    st.rerun()
-                                else:
-                                    st.error("Erro ao deletar no banco.")
-                            except requests.exceptions.RequestException:
-                                st.error("🚨 Erro de conexão.")
+                            registro_selecionado = opcoes_del[item_del]
+                            modal_confirmar_deletar_desperdicio(registro_selecionado, item_del)
                 else:
                     st.info("Nenhum registro de desperdício para deletar.")
             else:
                 st.error("Erro ao buscar dados.")
         except requests.exceptions.RequestException:
-            st.error("🚨 Erro ao conectar com o servidor.")
+         st.error("🚨 Erro ao conectar com o servidor.")

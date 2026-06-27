@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from backend.models import Comida, Desperdicio
-from backend.schemas import ComidaCreate, ComidaUpdate, DesperdicioCreate, DesperdicioUpdate
+from backend.models import Comida, Desperdicio, Usuario
+from backend.schemas import ComidaCreate, ComidaUpdate, DesperdicioCreate, DesperdicioUpdate, UsuarioCreate, UsuarioResponse
 import math
+
 
 def listar_comidas(db: Session, nome: str = None, page: int = 1, limit: int = 10):
     query = db.query(Comida)
@@ -141,3 +142,26 @@ def deletar_desperdicio(db: Session, desperdicio_id: int):
         db.delete(desperdicio)
         db.commit()
     return desperdicio
+
+
+def obter_usuario_por_email(db: Session, email: str):
+    """Busca um usuário no banco pelo email."""
+    # Usando a classe Usuario diretamente
+    return db.query(Usuario).filter(Usuario.email == email).first()
+
+def criar_usuario(db: Session, usuario: UsuarioCreate):
+    """Salva o novo usuário no banco com a senha em texto puro."""
+    
+    # Usando a classe Usuario diretamente
+    db_usuario = Usuario(
+        nome=usuario.nome,
+        email=usuario.email,
+        senha=usuario.senha 
+    )
+    
+    # Salva e atualiza os dados no banco
+    db.add(db_usuario)
+    db.commit()
+    db.refresh(db_usuario)
+    
+    return db_usuario

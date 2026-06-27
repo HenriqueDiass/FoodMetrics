@@ -87,30 +87,47 @@ def tela_login():
             st.markdown(top_card_html, unsafe_allow_html=True)
             
             with st.form("login_form"):
-                usuario = st.text_input("Usuário", placeholder="admin")
+                usuario = st.text_input("E-mail", placeholder="usuario@gmail.com")
                 senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
                 
                 submitted = st.form_submit_button("Entrar no sistema", use_container_width=True)
-                
+
+                col_vazia, col_link = st.columns([2.1, 1.8])
+                with col_link:
+                    btn_login = st.form_submit_button("Não tem uma conta? Cadastre-se")
+
                 if submitted:
                     import requests
                     
-                    try:
-                        # Chama a API de login
-                        response = requests.post(
-                            "http://127.0.0.1:8000/token",
-                            data={"username": usuario, "password": senha}
-                        )
-                        
-                        if response.status_code == 200:
-                            dados = response.json()
-                            st.session_state.autenticado = True
-                            st.session_state.token = dados["access_token"]
-                            st.rerun()
-                        else:
-                            st.error("Usuário ou senha incorretos.")
-                    except requests.exceptions.ConnectionError:
-                        st.error("Não foi possível conectar ao servidor. O backend está rodando?")
+                    if not usuario or not senha:
+                        st.warning("Por favor, preencha e-mail e senha.")
+                    else:
+                        try:
+                            # Chama a API de login
+                            # NOTA: Mesmo sendo o e-mail do usuário, a chave AQUI precisa 
+                            # continuar como "username" para o FastAPI aceitar.
+                            response = requests.post(
+                                "http://127.0.0.1:8000/token",
+                                data={"username": usuario, "password": senha}
+                            )
+                            
+                            if response.status_code == 200:
+                                dados = response.json()
+                                st.session_state.autenticado = True
+                                # Salva o token na sessão para usar nas próximas requisições protegidas
+                                st.session_state.token = dados["access_token"]
+                                st.success("Login aprovado!")
+                                st.rerun()
+                            else:
+                                st.error("E-mail ou senha incorretos.")
+                        except requests.exceptions.ConnectionError:
+                            st.error("Não foi possível conectar ao servidor. O backend está rodando?")
+                            
+            # Esta verificação precisa ficar fora do 'if submitted' mas dentro do 'with col2:'
+            if btn_login:
+                st.session_state.tela_auth = "cadastro"
+                st.rerun()
+
     
     st.write("")
     

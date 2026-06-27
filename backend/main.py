@@ -8,7 +8,7 @@ from backend.database import Base, engine, get_db
 from backend.schemas import (
     ComidaCreate, ComidaResponse, ComidaUpdate,
     DesperdicioCreate, DesperdicioResponse, DesperdicioUpdate,
-    PaginatedComida, PaginatedDesperdicio
+    PaginatedComida, PaginatedDesperdicio, UsuarioCreate,UsuarioResponse
 )
 from typing import Optional
 
@@ -25,18 +25,37 @@ app.add_middleware(
 
 # --- Rota de Autenticação ---
 
+#@app.post("/token")
+#def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+#    # 1. Busca o usuário no banco de dados pelo e-mail (enviado no campo username)
+#    usuario = crud.obter_usuario_por_email(db, email=form_data.username)
+#    
+#    # 2. Se o usuário não existir, ou a senha informada for incorreta
+#    if not usuario or not auth.verificar_senha(form_data.password, usuario.senha):
+#        raise HTTPException(
+#            status_code=status.HTTP_401_UNAUTHORIZED,
+#            detail="E-mail ou senha incorretos",
+#            headers={"WWW-Authenticate": "Bearer"},
+#        )
+#    
+#    # 3. Se as credenciais estiverem certas, gera o token JWT contendo o e-mail no "sub"
+#    access_token = auth.criar_token_acesso(data={"sub": usuario.email})
+#    
+#    return {"access_token": access_token, "token_type": "bearer"}
+
 @app.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    if form_data.username != "admin" or not auth.verificar_senha(form_data.password, auth.gerar_hash_senha("123")):
+    usuario = crud.obter_usuario_por_email(db, email=form_data.username)
+    
+    # Compara diretamente a senha do formulário com a senha "pura" que está no banco
+    if not usuario or not auth.verificar_senha(form_data.password, usuario.senha):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuário ou senha incorretos",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="E-mail ou senha incorretos",
         )
     
-    access_token = auth.criar_token_acesso(data={"sub": form_data.username})
+    access_token = auth.criar_token_acesso(data={"sub": usuario.email})
     return {"access_token": access_token, "token_type": "bearer"}
-
 
 # --- Rotas para Comidas ---
 
@@ -120,3 +139,22 @@ def deletar_desperdicio(desperdicio_id: int, db: Session = Depends(get_db), curr
     desperdicio = crud.deletar_desperdicio(db, desperdicio_id)
     if not desperdicio:
         raise HTTPException(status_code=404, detail="Registro de desperdício não encontrado")
+
+
+
+# --- Rotas para Acesso ---
+
+@app.post("/usuarios", response_model=UsuarioResponse, status_code=201)
+def criar_usuario(dados: UsuarioCreate, db: Session = Depends(get_db)):
+    
+    # 1. Verifica se o email já existe no banco
+    usuario_existente = crud.obter_usuario_por_email(db, email=dados.email)
+    
+    # 2. Retorna erro caso o email seja duplicado
+    if usuario_existente:
+        raise HTTPException(status_code=400, detail="Email já cadastrado.")
+    
+    # 3. Cria o usuário caso o email esteja livre
+    novo_usuario = crud.criar_usuario(db, dados)
+    
+    return novo_usuario
