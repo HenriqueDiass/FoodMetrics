@@ -4,9 +4,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from backend import crud, auth
-from backend.database import Base, engine, get_db
-from backend.schemas import (
+from database import crud, auth
+from database import Base, engine, get_db
+from schemas import (
     ComidaCreate, ComidaResponse, ComidaUpdate,
     DesperdicioCreate, DesperdicioResponse, DesperdicioUpdate,
     PaginatedComida, PaginatedDesperdicio, UsuarioCreate, UsuarioResponse
