@@ -7,12 +7,20 @@ st.set_page_config(page_title="Registrar Desperdício", page_icon="🗑️", lay
 exibir_status_sidebar()
 bloqueio_api_offline()
 
+# --- Lógica de Toasts (Notificações Flutuantes) ---
+if "toast_sucesso" in st.session_state:
+    st.toast(st.session_state.toast_sucesso, icon="✅")
+    del st.session_state.toast_sucesso
+if "toast_erro" in st.session_state:
+    st.toast(st.session_state.toast_erro, icon="🔴")
+    del st.session_state.toast_erro
+
 st.title("🗑️ Gestão de Desperdícios")
 
 API_COMIDAS = "http://127.0.0.1:8000/comidas"
 API_DESPERDICIOS = "http://127.0.0.1:8000/desperdicios"
 
-# Carregar comidas (para selectboxes, pegamos uma lista maior)
+# Carregar comidas
 resp_comidas = requests.get(API_COMIDAS, params={"limit": 1000})
 lista_comidas = resp_comidas.json()["data"] if resp_comidas.status_code == 200 else []
 
@@ -22,14 +30,11 @@ else:
     opcoes_comidas = {item["nome"]: item["id"] for item in lista_comidas}
     opcoes_comidas_inverso = {item["id"]: item["nome"] for item in lista_comidas}
 
-  
     aba_listar, aba_cadastrar, aba_editar, aba_deletar = st.tabs(["📋 Listar", "➕ Cadastrar", "✏️ Editar", "❌ Deletar"])
-
     
     with aba_listar:
         termo_busca = st.text_input("🔍 Buscar desperdício por Setor (ex: Cozinha Quente)...").lower()
         
-        # Gerenciar estado da página
         if "page_desperdicio" not in st.session_state:
             st.session_state.page_desperdicio = 1
         
@@ -47,26 +52,27 @@ else:
                 
                 if desperdicios:
                     df = pd.DataFrame(desperdicios)
-                    
                     df["Nome do Alimento"] = df["comida_id"].map(opcoes_comidas_inverso)
-                    
                     df_mostrar = df[["id", "Nome do Alimento", "setor", "quantidade", "motivo"]].copy()
                     df_mostrar.columns = ["ID", "Alimento", "Setor", "Quantidade (kg)", "Motivo"]
                     
+                    # --- FORÇANDO ALINHAMENTO À ESQUERDA ---
+                    df_mostrar["Quantidade (kg)"] = df_mostrar["Quantidade (kg)"].apply(lambda x: f"{float(x):.2f}")
+                    df_mostrar = df_mostrar.astype(str) # Converte tudo para texto
+                    
                     def aplicar_zebra(row):
-                        cor = '#f0f5fa' if row.name % 2 == 0 else '#ffffff'
+                        cor = '#f0f5fa' if int(row.name) % 2 == 0 else '#ffffff'
                         return [f'background-color: {cor}'] * len(row)
                         
-                    
                     st.dataframe(
-                        df_mostrar.style.apply(aplicar_zebra, axis=1).format({"Quantidade (kg)": "{:.2f}"}), 
+                        df_mostrar.style.apply(aplicar_zebra, axis=1), 
                         use_container_width=True, 
                         hide_index=True
                     )
 
-                    # Melhoria Visual da Paginação
+                    # --- PAGINAÇÃO COM TAMANHO AJUSTADO E ALINHADO ---
                     st.markdown("---")
-                    col_voltar, col_info, col_avancar = st.columns([2, 3, 2])
+                    col_voltar, col_info, col_avancar = st.columns([1, 4, 1])
                     
                     with col_voltar:
                         if st.button("⬅️ Voltar", disabled=st.session_state.page_desperdicio <= 1, use_container_width=True, key="btn_ant_desp"):
@@ -74,10 +80,11 @@ else:
                             st.rerun()
                     
                     with col_info:
+                        # Div alterada: display: flex para manter tudo na mesma linha e height: 40px para a mesma espessura do botão
                         st.markdown(f"""
-                            <div style='text-align: center; border: 1px solid #e6e9ef; border-radius: 8px; padding: 7px; background-color: #f8f9fb;'>
-                                <span style='color: #6d7a8a; font-size: 14px;'>Página <strong style='font-size: 16px; color: #123258;'>{st.session_state.page_desperdicio}</strong> de {total_pages}</span>
-                                <span style='color: #bdc3c7; margin: 0 10px;'>|</span>
+                            <div style='display: flex; justify-content: center; align-items: center; border: 1px solid #e6e9ef; border-radius: 8px; height: 40px; background-color: #f8f9fb;'>
+                                <span style='color: #6d7a8a; font-size: 14px;'>Página <strong style='font-size: 16px; color: #123258; margin: 0 4px;'>{st.session_state.page_desperdicio}</strong> de {total_pages}</span>
+                                <span style='color: #bdc3c7; margin: 0 15px;'>|</span>
                                 <span style='color: #6d7a8a; font-size: 13px;'>Total: {total_items} registros</span>
                             </div>
                         """, unsafe_allow_html=True)
@@ -93,7 +100,6 @@ else:
         except requests.exceptions.RequestException:
             st.error("🚨 Erro ao conectar com o servidor.")
 
-    
     with aba_cadastrar:
         st.subheader("Registrar nova perda de alimento")
         with st.form("form_desperdicio", clear_on_submit=True):
@@ -118,14 +124,14 @@ else:
                         headers["Authorization"] = f"Bearer {st.session_state.token}"
                     res = requests.post(API_DESPERDICIOS, json=payload, headers=headers)
                     if res.status_code in [200, 201]:
-                        st.success("✅ Desperdício registrado com sucesso!")
+                        st.session_state.toast_sucesso = "Desperdício registrado com sucesso!"
                         st.rerun()
                     else:
-                        st.error("Erro ao registrar no backend.")
+                        st.session_state.toast_erro = "Erro ao registrar no backend."
+                        st.rerun()
                 except requests.exceptions.RequestException:
                     st.error("🚨 Backend offline.")
 
-    
     with aba_editar:
         st.subheader("Modificar um item existente")
         try:
@@ -178,10 +184,11 @@ else:
                                         res_up = requests.patch(f"{API_DESPERDICIOS}/{dados_atuais['id']}", json=payload_up, headers=headers)
                                     
                                     if res_up.status_code in [200, 204]:
-                                        st.success("✅ Registro atualizado com sucesso!")
+                                        st.session_state.toast_sucesso = "Registro atualizado com sucesso!"
                                         st.rerun()
                                     else:
-                                        st.error("Falha ao atualizar.")
+                                        st.session_state.toast_erro = "Falha ao atualizar registro."
+                                        st.rerun()
                                 except requests.exceptions.RequestException:
                                     st.error("🚨 Erro de conexão.")
                 else:
@@ -191,7 +198,6 @@ else:
         except requests.exceptions.RequestException:
             st.error("🚨 Erro ao buscar os dados para edição.")
 
-    
     with aba_deletar:
         st.subheader("❌ Remover Desperdício do Histórico")
         try:
@@ -205,49 +211,31 @@ else:
                     for d in desperdicios_del:
                         nome_alim = opcoes_comidas_inverso.get(d["comida_id"], "Desconhecido")
                         label = f"ID: {d['id']} - {nome_alim} ({d['quantidade']}kg no {d['setor']})"
-                        opcoes_del[label] = d
+                        opcoes_del[label] = d['id']
                     
                     col_sel, col_btn = st.columns([3, 1])
                     with col_sel:
                         item_del = st.selectbox("Selecione o registro que deseja deletar:", list(opcoes_del.keys()), key="del_desp_select")
-                    
-                    # Definição do Modal de Confirmação Crítica para Desperdício
-                    @st.dialog("Confirmar Exclusão de Registro")
-                    def modal_confirmar_deletar_desperdicio(dados_desp, label_item):
-                        st.warning("⚠️ Esta ação removerá o registro do histórico do dashboard.")
-                        st.write("Tem certeza que deseja apagar o seguinte lançamento?")
-                        st.info(f"**{label_item}**")
-                        
-                        col_modal_cancel, col_modal_conf = st.columns(2)
-                        with col_modal_cancel:
-                            if st.button("Cancelar", use_container_width=True):
-                                st.rerun() # Fecha sem executar
-                        with col_modal_conf:
-                            if st.button("Confirmar Exclusão", type="primary", use_container_width=True):
-                                try:
-                                    headers = {}
-                                    if "token" in st.session_state:
-                                        headers["Authorization"] = f"Bearer {st.session_state.token}"
-                                    
-                                    res_del = requests.delete(f"{API_DESPERDICIOS}/{dados_desp['id']}", headers=headers)
-                                    if res_del.status_code in [200, 204]:
-                                        st.success("✅ Registro deletado com sucesso!")
-                                        st.rerun() # Executa, fecha e recarrega
-                                    else:
-                                        st.error("Erro ao deletar no banco.")
-                                except requests.exceptions.RequestException:
-                                    st.error("🚨 Erro de conexão.")
-
                     with col_btn:
                         st.write("")
                         st.write("")
-                        # O clique aqui apenas invoca o diálogo seguro
                         if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
-                            registro_selecionado = opcoes_del[item_del]
-                            modal_confirmar_deletar_desperdicio(registro_selecionado, item_del)
+                            try:
+                                headers = {}
+                                if "token" in st.session_state:
+                                    headers["Authorization"] = f"Bearer {st.session_state.token}"
+                                res_del = requests.delete(f"{API_DESPERDICIOS}/{opcoes_del[item_del]}", headers=headers)
+                                if res_del.status_code in [200, 204]:
+                                    st.session_state.toast_sucesso = "Registro deletado com sucesso!"
+                                    st.rerun()
+                                else:
+                                    st.session_state.toast_erro = "Erro ao deletar no banco."
+                                    st.rerun()
+                            except requests.exceptions.RequestException:
+                                st.error("🚨 Erro de conexão.")
                 else:
                     st.info("Nenhum registro de desperdício para deletar.")
             else:
                 st.error("Erro ao buscar dados.")
         except requests.exceptions.RequestException:
-         st.error("🚨 Erro ao conectar com o servidor.")
+            st.error("🚨 Erro ao conectar com o servidor.")
