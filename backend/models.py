@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Numeric, Boolean, DateTime, func, ForeignKey
 from sqlalchemy.orm import relationship
-from backend.database import Base
+from database import Base
 
 class Comida(Base):
     __tablename__ = "comidas"

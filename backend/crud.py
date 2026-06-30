@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from backend.models import Comida, Desperdicio, Usuario
-from backend.schemas import ComidaCreate, ComidaUpdate, DesperdicioCreate, DesperdicioUpdate, UsuarioCreate, UsuarioResponse
+from models import Comida, Desperdicio, Usuario
+from schemas import ComidaCreate, ComidaUpdate, DesperdicioCreate, DesperdicioUpdate, UsuarioCreate, UsuarioResponse
 import math
 
 
