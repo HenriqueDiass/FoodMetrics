@@ -4,7 +4,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from database import crud, auth
+import crud
+import auth
 from database import Base, engine, get_db
 from schemas import (
     ComidaCreate, ComidaResponse, ComidaUpdate,
