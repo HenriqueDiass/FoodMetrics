@@ -46,9 +46,9 @@ def criar_usuario(dados: UsuarioCreate, db: Session = Depends(get_db)):
     # 1. Verifica se o email já existe no banco
     usuario_existente = crud.obter_usuario_por_email(db, email=dados.email)
     
-    # 2. Retorna erro caso o email seja duplicado
+    # 2. Retorna erro caso o email seja duplicado (Mudado para 409 conforme REQ 2)
     if usuario_existente:
-        raise HTTPException(status_code=400, detail="Email já cadastrado.")
+        raise HTTPException(status_code=409, detail="Email já cadastrado.")
     
     # 3. CRIPTOGRAFIA DE SENHA
     dados.senha = auth.gerar_hash_senha(dados.senha)
@@ -56,7 +56,7 @@ def criar_usuario(dados: UsuarioCreate, db: Session = Depends(get_db)):
     # 4. Cria o usuário no banco
     novo_usuario = crud.criar_usuario(db, dados)
     
-    # 5. ENVIO DE E-MAIL (Chama a função passando o email e o nome do usuário recém-criado)
+    # 5. ENVIO DE E-MAIL
     auth.enviar_email_boas_vindas(destinatario=novo_usuario.email, nome=novo_usuario.nome)
     
     return novo_usuario
