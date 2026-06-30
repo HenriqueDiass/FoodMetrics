@@ -15,7 +15,7 @@ if "toast_erro" in st.session_state:
 
 st.title("🍔 Gestão do Cardápio Base")
 
-API_COMIDAS = "http://127.0.0.1:8000/comidas"
+API_COMIDAS = "https://foodmetrics-production.up.railway.app/comidas"
 
 aba_listar, aba_cadastrar, aba_editar, aba_deletar = st.tabs(["📋 Listar", "➕ Cadastrar", "✏️ Editar", "❌ Deletar"])
 

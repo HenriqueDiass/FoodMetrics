@@ -18,8 +18,8 @@ bloqueio_api_offline()
 
 st.title("🗑️ Gestão de Desperdícios")
 
-API_COMIDAS = "http://127.0.0.1:8000/comidas"
-API_DESPERDICIOS = "http://127.0.0.1:8000/desperdicios"
+API_COMIDAS = "https://foodmetrics-production.up.railway.app/comidas"
+API_DESPERDICIOS = "https://foodmetrics-production.up.railway.app/desperdicios"
 
 # Carregar comidas (para selectboxes, pegamos uma lista maior)
 resp_comidas = requests.get(API_COMIDAS, params={"limit": 1000})
