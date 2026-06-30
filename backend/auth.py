@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import bcrypt  # <-- Usando bcrypt puro agora
+import bcrypt
 
 # Configurações básicas (Em produção, use variáveis de ambiente)
 SECRET_KEY = "123"
@@ -31,7 +31,6 @@ def criar_token_acesso(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        # Mudado aqui para usar a sua variável configurada (ACCESS_TOKEN_EXPIRE_MINUTES)
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
