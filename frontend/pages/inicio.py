@@ -2,6 +2,13 @@ import streamlit as st
 import os
 from utils import exibir_status_sidebar
 
+if "toast_sucesso" in st.session_state:
+    st.toast(st.session_state.toast_sucesso, icon="✅")
+    del st.session_state.toast_sucesso
+if "toast_erro" in st.session_state:
+    st.toast(st.session_state.toast_erro, icon="🔴")
+    del st.session_state.toast_erro
+    
 api_online = exibir_status_sidebar()
 
 PALETA_FOODMETRICS = ["#123258", "#2a91d3", "#53a458", "#50626e"]
