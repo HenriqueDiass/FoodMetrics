@@ -1,51 +1,67 @@
 import streamlit as st
 import os
 import base64
-import requests
+
 
 def get_logo_base64():
+    """Lê a logo local e converte para base64 para uso no HTML/CSS."""
     diretorio_atual = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     caminho_logo = os.path.join(diretorio_atual, "data", "logo.png")
+    
     try:
         with open(caminho_logo, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode()
+            encoded_string = base64.b64encode(image_file.read()).decode()
+        return encoded_string
     except FileNotFoundError:
         return ""
+    
 
 def tela_login():
-    # --- Lógica de Toasts na Tela de Login ---
-    if "toast_sucesso" in st.session_state:
-        st.toast(st.session_state.toast_sucesso, icon="✅")
-        del st.session_state.toast_sucesso
-    if "toast_erro" in st.session_state:
-        st.toast(st.session_state.toast_erro, icon="🔴")
-        del st.session_state.toast_erro
-
     if st.session_state.get("autenticado", False):
         return
         
-    if "tela_auth" not in st.session_state:
-        st.session_state.tela_auth = "login"
-
     st.markdown("""
     <style>
-    [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #123258 10%, #53a458 90%) !important; }
+    [data-testid="stAppViewContainer"] {
+        background: linear-gradient(135deg, #123258 10%, #53a458 90%) !important;
+    }
+    
     header { visibility: hidden; }
     
+    div[data-testid="column"] > div > div > div > div.element-container {
+        margin-bottom: 0 !important;
+    }
+
     div[data-testid="stForm"] {
         background-color: #ffffff;
         padding: 2.5rem 2rem;
         border-radius: 0 0 24px 24px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         border: none;
-        margin-top: -15px;
+        margin-top: -5px;
+        position: relative;
+        z-index: 0;
     }
     
-    div[data-testid="stFormSubmitButton"] button { border-radius: 8px !important; font-weight: 600 !important; }
-    div[data-testid="stFormSubmitButton"] button[kind="primary"] { background-color: #53a458 !important; color: white !important; border: none !important; }
-    div[data-testid="stFormSubmitButton"] button[kind="primary"]:hover { background-color: #418245 !important; transform: translateY(-2px) !important; }
-    div[data-testid="stFormSubmitButton"] button[kind="secondary"] { background-color: transparent !important; color: #123258 !important; border: 2px solid #123258 !important; }
-    div[data-testid="stFormSubmitButton"] button[kind="secondary"]:hover { background-color: #f0f5fa !important; transform: translateY(-2px) !important; }
+    /* Botão verde do FoodMetrics */
+    div[data-testid="stFormSubmitButton"] button {
+        background-color: #53a458 !important; 
+        color: white !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 0.5rem !important;
+        margin-top: 1rem !important;
+        border: none !important;
+        transition: 0.2s !important;
+    }
+    div[data-testid="stFormSubmitButton"] button:hover {
+        background-color: #418245 !important;
+        transform: translateY(-2px) !important;
+    }
+
+    div[data-testid="InputInstructions"] {
+        display: none !important;
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -53,85 +69,66 @@ def tela_login():
         col1, col2, col3 = st.columns([1.5, 2.0, 1.5])
         with col2:
             st.write("") 
+            st.write("")
+            
             logo_b64 = get_logo_base64()
             
-            top_card_html = "<div style='background: linear-gradient(135deg, #53a458 0%, #123258 100%); padding: 3rem 2rem 1rem 2rem; border-radius: 12px 12px 0 0; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; z-index: 2;'>"
+            # Top card gradient (Azul claro para Azul Escuro)
+            top_card_html = "<div style='background: linear-gradient(135deg, #53a458 0%, #123258 100%); padding: 3rem 2rem 2rem 2rem; border-radius: 12px 12px 0 0; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; z-index: 1;'>"
+            
             if logo_b64:
-                top_card_html += f"<div style='background-color: white; padding: 12px 24px; border-radius: 16px; display: inline-block; margin-bottom: 1rem;'><img src='data:image/png;base64,{logo_b64}' style='width: 250px;'></div>"
-            top_card_html += "<div style='color: #ffffff; font-size: 1.5rem; font-weight: bold;'>FOODMETRICS</div></div>"
+                top_card_html += f"<div style='background-color: white; padding: 12x 24px; border-radius: 16px; display: inline-block; margin-bottom: 2rem;'><img src='data:image/png;base64,{logo_b64}' style='width: 350px;'></div>"
+            else:
+                top_card_html += "<div style='color: white; margin-bottom: 2rem; font-size: 1.5rem; font-weight: bold;'>FOODMETRICS</div>"
+                
+            top_card_html += "<div style='color: #ffffff; font-size: 1.8rem; font-weight: bold; margin-top: 0; margin-bottom: 0.5rem;'>FOODMETRICS</div>"
+            top_card_html += "<div style='color: #E2E8F0; font-size: 1.1rem; font-weight: normal; margin-top: 0; line-height: 1.4;'>Gestão Inteligente de Desperdício</div>"
+            top_card_html += "<p style='font-size: 0.85rem; color: #CBD5E1; margin-top: 2rem; margin-bottom: 0;'>Transformando sobras em economia</p>"
+            top_card_html += "</div>"
+            
             st.markdown(top_card_html, unsafe_allow_html=True)
             
-            # ======== TELA DE LOGIN ========
-            if st.session_state.tela_auth == "login":
-                with st.form("form_login"):
-                    st.markdown("<h4 style='text-align: center; color: #123258; margin-bottom: 1rem;'>Entrar</h4>", unsafe_allow_html=True)
-                    usuario = st.text_input("Email", placeholder="Seu email cadastrado")
-                    senha = st.text_input("Senha", type="password", placeholder="Sua senha")
-                    
-                    st.write("") 
-                    col_btn1, col_btn2 = st.columns(2)
-                    with col_btn1:
-                        submitted_login = st.form_submit_button("Entrar", type="primary", use_container_width=True)
-                    with col_btn2:
-                        ir_cadastro = st.form_submit_button("Criar Conta", type="secondary", use_container_width=True)
-                    
-                    if submitted_login:
-                        if not usuario or not senha:
-                            st.warning("Preencha e-mail e senha.")
-                        else:
-                            try:
-                                response = requests.post("http://127.0.0.1:8000/token", data={"username": usuario, "password": senha})
-                                if response.status_code == 200:
-                                    st.session_state.autenticado = True
-                                    st.session_state.token = response.json()["access_token"]
-                                    # GUARDA O TOAST NA MEMÓRIA PARA A PRÓXIMA TELA
-                                    st.session_state.toast_sucesso = "Login realizado com sucesso! Bem-vindo(a)."
-                                    st.rerun()
-                                else:
-                                    st.error("E-mail ou senha incorretos.")
-                            except requests.exceptions.ConnectionError:
-                                st.error("Não foi possível conectar ao servidor.")
-                    
-                    if ir_cadastro:
-                        st.session_state.tela_auth = "cadastro"
-                        st.rerun()
+            with st.form("login_form"):
+                usuario = st.text_input("E-mail", placeholder="usuario@gmail.com")
+                senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
+                
+                submitted = st.form_submit_button("Entrar no sistema", use_container_width=True)
 
-            # ======== TELA DE CADASTRO ========
-            else:
-                with st.form("form_cadastro"):
-                    st.markdown("<h4 style='text-align: center; color: #123258; margin-bottom: 1rem;'>Nova Conta</h4>", unsafe_allow_html=True)
-                    nome = st.text_input("Nome Completo")
-                    email = st.text_input("Email")
-                    senha = st.text_input("Senha", type="password")
-                    confirma_senha = st.text_input("Confirmar Senha", type="password")
+                col_vazia, col_link = st.columns([2.1, 1.8])
+                with col_link:
+                    btn_login = st.form_submit_button("Não tem uma conta? Cadastre-se")
+
+                if submitted:
+                    import requests
                     
-                    st.write("") 
-                    col_btn1, col_btn2 = st.columns(2)
-                    with col_btn1:
-                        submitted_cadastro = st.form_submit_button("Cadastrar", type="primary", use_container_width=True)
-                    with col_btn2:
-                        ir_login = st.form_submit_button("Voltar", type="secondary", use_container_width=True)
-                    
-                    if submitted_cadastro:
-                        if not nome or not email or not senha:
-                            st.warning("Preencha todos os campos.")
-                        elif senha != confirma_senha: 
-                            st.error("As senhas não coincidem!")
-                        else:
-                            dados = {"nome": nome, "email": email, "senha": senha}
-                            try:
-                                resp = requests.post("http://127.0.0.1:8000/usuarios", json=dados)
-                                if resp.status_code == 201:
-                                    # GUARDA O TOAST E VOLTA PRA TELA DE LOGIN SOZINHO
-                                    st.session_state.toast_sucesso = "Conta criada com sucesso! Verifique seu e-mail."
-                                    st.session_state.tela_auth = "login"
-                                    st.rerun()
-                                elif resp.status_code == 400:
-                                    st.toast('Erro: Email já existe.', icon='🔴')
-                                    st.error("Este email já está cadastrado no sistema.")
-                            except requests.exceptions.ConnectionError:
-                                st.error("Não foi possível conectar ao servidor.")
-                    
-                    if ir_login:
-                        st.session_state.tela_auth = "login"
-                        st.rerun()
+                    if not usuario or not senha:
+                        st.warning("Por favor, preencha e-mail e senha.")
+                    else:
+                        try:
+                            # Chama a API de login
+                            # NOTA: Mesmo sendo o e-mail do usuário, a chave AQUI precisa 
+                            # continuar como "username" para o FastAPI aceitar.
+                            response = requests.post(
+                                "http://127.0.0.1:8000/token",
+                                data={"username": usuario, "password": senha}
+                            )
+                            
+                            if response.status_code == 200:
+                                dados = response.json()
+                                st.session_state.autenticado = True
+                                # Salva o token na sessão para usar nas próximas requisições protegidas
+                                st.session_state.token = dados["access_token"]
+                                st.success("Login aprovado!")
+                                st.rerun()
+                            else:
+                                st.error("E-mail ou senha incorretos.")
+                        except requests.exceptions.ConnectionError:
+                            st.error("Não foi possível conectar ao servidor. O backend está rodando?")
+                            
+            # Esta verificação precisa ficar fora do 'if submitted' mas dentro do 'with col2:'
+            if btn_login:
+                st.session_state.tela_auth = "cadastro"
+                st.rerun()
+
+    
+    st.write("")

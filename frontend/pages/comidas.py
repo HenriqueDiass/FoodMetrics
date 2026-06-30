@@ -4,8 +4,8 @@ import pandas as pd
 
 st.set_page_config(page_title="Gestão de Alimentos", page_icon="🍔", layout="wide")
 
-# --- Lógica de Toasts (Notificações Flutuantes) ---
-# Mostra o toast se ele estiver salvo na memória, e depois apaga para não repetir
+# --- LÓGICA DOS TOASTS (Requisito 4) ---
+# Fica no topo para disparar assim que a tela recarregar
 if "toast_sucesso" in st.session_state:
     st.toast(st.session_state.toast_sucesso, icon="✅")
     del st.session_state.toast_sucesso
@@ -42,9 +42,9 @@ with aba_listar:
                 df_mostrar = df[["id", "nome", "categoria", "custo_unitario"]].copy()
                 df_mostrar.columns = ["ID", "Nome do Alimento", "Categoria", "Custo (R$)"]
                 
-                # --- FORÇANDO ALINHAMENTO À ESQUERDA ---
+                # Formata os números e converte TUDO para texto para alinhar à esquerda
                 df_mostrar["Custo (R$)"] = df_mostrar["Custo (R$)"].apply(lambda x: f"{float(x):.2f}")
-                df_mostrar = df_mostrar.astype(str) # Converte tudo para texto
+                df_mostrar = df_mostrar.astype(str)
                 
                 def aplicar_zebra(row):
                     cor = '#f0f5fa' if int(row.name) % 2 == 0 else '#ffffff'
@@ -56,7 +56,6 @@ with aba_listar:
                     hide_index=True
                 )
                 
-                # --- PAGINAÇÃO COM TAMANHO AJUSTADO E ALINHADO ---
                 st.markdown("---")
                 col_voltar, col_info, col_avancar = st.columns([1, 4, 1])
                 
@@ -66,12 +65,11 @@ with aba_listar:
                         st.rerun()
                 
                 with col_info:
-                    # Div alterada: display: flex para manter tudo na mesma linha e height: 40px para a mesma espessura do botão
                     st.markdown(f"""
-                        <div style='display: flex; justify-content: center; align-items: center; border: 1px solid #e6e9ef; border-radius: 8px; height: 40px; background-color: #f8f9fb;'>
-                            <span style='color: #6d7a8a; font-size: 14px;'>Página <strong style='font-size: 16px; color: #123258; margin: 0 4px;'>{st.session_state.page_comidas}</strong> de {total_pages}</span>
-                            <span style='color: #bdc3c7; margin: 0 15px;'>|</span>
-                            <span style='color: #6d7a8a; font-size: 13px;'>Total: {total_items} itens</span>
+                        <div style='text-align: center; border: 1px solid #e6e9ef; border-radius: 8px; padding: 7px; background-color: #f8f9fb;'>
+                            <span style='color: #6d7a8a; font-size: 14px;'>Página <strong style='font-size: 16px; color: #123258;'>{st.session_state.page_comidas}</strong> de {total_pages}</span>
+                            <span style='color: #bdc3c7; margin: 0 10px;'>|</span>
+                            <span style='color: #6d7a8a; font-size: 13px;'>Total de {total_items} itens</span>
                         </div>
                     """, unsafe_allow_html=True)
                 
@@ -84,7 +82,8 @@ with aba_listar:
         else:
             st.info("Nenhum alimento cadastrado ainda.")
     except requests.exceptions.RequestException:
-        st.error("🚨 Erro ao conectar com o servidor.")
+        st.toast("Erro ao conectar com o servidor.", icon="🔴")
+
 
 with aba_cadastrar:
     st.subheader("Adicionar novo item ao estoque")
@@ -100,15 +99,16 @@ with aba_cadastrar:
                 headers = {}
                 if "token" in st.session_state:
                     headers["Authorization"] = f"Bearer {st.session_state.token}"
+                    
                 resp = requests.post(API_COMIDAS, json=payload, headers=headers)
                 if resp.status_code in [200, 201]:
                     st.session_state.toast_sucesso = f"{nome} cadastrado com sucesso!"
                     st.rerun()  
                 else:
-                    st.session_state.toast_erro = f"Erro no Backend: {resp.status_code} - {resp.text}"
-                    st.rerun()
+                    st.toast("Erro ao cadastrar na API.", icon="🔴")
             except requests.exceptions.RequestException:
-                st.error("🚨 Backend offline.")
+                st.toast("Backend offline.", icon="🔴")
+
 
 with aba_editar:
     st.subheader("Modificar um item existente")
@@ -139,19 +139,19 @@ with aba_editar:
                                     headers["Authorization"] = f"Bearer {st.session_state.token}"
                                 res_up = requests.patch(f"{API_COMIDAS}/{dados_atuais['id']}", json=payload_up, headers=headers)
                                 if res_up.status_code == 200:
-                                    st.session_state.toast_sucesso = "Alimento atualizado com sucesso!"
+                                    st.session_state.toast_sucesso = "Atualizado com sucesso!"
                                     st.rerun()
                                 else:
-                                    st.session_state.toast_erro = "Falha ao atualizar o alimento."
-                                    st.rerun()
+                                    st.toast("Falha ao atualizar.", icon="🔴")
                             except requests.exceptions.RequestException:
-                                st.error("🚨 Erro de conexão.")
+                                st.toast("Erro de conexão.", icon="🔴")
             else:
                 st.info("Cadastre um alimento primeiro.")
         else:
-            st.info("Erro ao buscar dados.")
+            st.toast("Erro ao buscar dados.", icon="🔴")
     except requests.exceptions.RequestException:
-        st.error("🚨 Erro ao buscar dados.")
+        st.toast("Erro ao conectar com o servidor.", icon="🔴")
+
 
 with aba_deletar:
     st.subheader("❌ Remover Alimento do Sistema")
@@ -161,31 +161,49 @@ with aba_deletar:
             resultado_del = resp.json()
             comidas_del = resultado_del["data"]
             if comidas_del:
-                opcoes_del = {f"ID {c['id']} - {c['nome']}": c['id'] for c in comidas_del}
+                opcoes_del = {f"ID {c['id']} - {c['nome']}": c for c in comidas_del}
                 
                 col_sel, col_btn = st.columns([3, 1])
                 with col_sel:
                     item_del = st.selectbox("Selecione o alimento que deseja deletar:", list(opcoes_del.keys()), key="del_comida_select")
+                
+                @st.dialog("Confirmar Exclusão de Alimento")
+                def modal_confirmar_deletar_comida(comida_dados):
+                    st.warning(f"⚠️ Atenção! Você está prestes a excluir permanentemente um item.")
+                    st.write(f"Deseja realmente deletar o alimento **{comida_dados['nome']}** (Categoria: {comida_dados['categoria']})?")
+                    
+                    col_modal_cancel, col_modal_conf = st.columns(2)
+                    with col_modal_cancel:
+                        if st.button("Cancelar", use_container_width=True):
+                            st.rerun() # Fecha o modal sem executar nada
+                    with col_modal_conf:
+                        if st.button("Confirmar Exclusão", type="primary", use_container_width=True):
+                            try:
+                                headers = {}
+                                if "token" in st.session_state:
+                                    headers["Authorization"] = f"Bearer {st.session_state.token}"
+                                
+                                res_del = requests.delete(f"{API_COMIDAS}/{comida_dados['id']}", headers=headers)
+                                
+                                if res_del.status_code == 204:
+                                    st.session_state.toast_sucesso = f"{comida_dados['nome']} deletado com sucesso do sistema!"
+                                    st.rerun() 
+                                elif res_del.status_code == 401:
+                                    st.toast("Erro de Autenticação: Usuário não autorizado.", icon="🔴")
+                                else:
+                                    st.toast("Erro ao deletar. O alimento pode estar vinculado a um desperdício.", icon="🔴")
+                            except requests.exceptions.RequestException:
+                                st.toast("Erro de conexão.", icon="🔴")
+
                 with col_btn:
                     st.write("") 
                     st.write("")
                     if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
-                        try:
-                            headers = {}
-                            if "token" in st.session_state:
-                                headers["Authorization"] = f"Bearer {st.session_state.token}"
-                            res_del = requests.delete(f"{API_COMIDAS}/{opcoes_del[item_del]}", headers=headers)
-                            if res_del.status_code == 204:
-                                st.session_state.toast_sucesso = "Alimento deletado com sucesso!"
-                                st.rerun()  
-                            else:
-                                st.session_state.toast_erro = "Erro ao deletar. O alimento pode estar vinculado."
-                                st.rerun()
-                        except requests.exceptions.RequestException:
-                            st.error("🚨 Erro de conexão.")
+                        comida_selecionada = opcoes_del[item_del]
+                        modal_confirmar_deletar_comida(comida_selecionada)
             else:
                 st.info("Nenhum alimento cadastrado para deletar.")
         else:
-            st.error("Erro ao buscar dados.")
+            st.toast("Erro ao buscar dados.", icon="🔴")
     except requests.exceptions.RequestException:
-        st.error("🚨 Erro ao conectar com o servidor.")
+        st.toast("Erro ao conectar com o servidor.", icon="🔴")
