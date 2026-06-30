@@ -29,3 +29,7 @@ O sistema opera sobre três pilares principais:
 
 ---
 *FoodMetrics - Transformando desperdício em dados para uma cozinha mais eficiente.*
+
+
+URL FRONT: https://foodmetrics.streamlit.app/
+URL BACK: https://foodmetrics-production.up.railway.app/docs
