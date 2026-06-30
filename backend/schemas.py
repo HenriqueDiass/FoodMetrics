@@ -66,3 +66,18 @@ class PaginatedDesperdicio(BaseModel):
     page: int
     limit: int
     pages: int
+
+
+
+class UsuarioCreate(BaseModel):
+    nome:       str
+    email:      str
+    senha:      str
+
+class UsuarioResponse(BaseModel):
+    id:         int
+    nome:       str
+    email:      str
+    criado_em:  datetime
+
+    model_config = ConfigDict(from_attributes=True)

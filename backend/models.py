@@ -27,6 +27,13 @@ class Desperdicio(Base):
     observacao      = Column(String, nullable=True)
     custo_estimado  = Column(Numeric(10, 2), nullable=False) # Valor calculado (quantidade * custo_unitario)
     criado_em       = Column(DateTime, server_default=func.now())
-
-   
     comida          = relationship("Comida", back_populates="desperdicios")
+
+class Usuario(Base):
+    __tablename__ = "usuarios"
+
+    id        = Column(Integer, primary_key=True, index=True)
+    nome      = Column(String, nullable=False)
+    email     = Column(String, unique=True, index=True, nullable=False)
+    senha     = Column(String, nullable=False) # Lembre-se: aqui o banco vai salvar o hash, e não a senha pura
+    criado_em = Column(DateTime, server_default=func.now())

@@ -14,7 +14,6 @@ class Base(DeclarativeBase):
     pass
 
 def get_db():
-    """Cria uma session por requisicao e fecha automaticamente."""
     db = SessionLocal()
     try:
         yield db

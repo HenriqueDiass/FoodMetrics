@@ -16,8 +16,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Onde o FastAPI deve procurar o token no Swagger UI
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-def verificar_senha(senha_plana, senha_hash):
-    return pwd_context.verify(senha_plana, senha_hash)
+#def verificar_senha(senha_plana, senha_hash):
+#    return pwd_context.verify(senha_plana, senha_hash)
+
+def verificar_senha(senha_plana, senha_banco):
+    # Como não tem criptografia, comparamos diretamente
+    return senha_plana == senha_banco
+
 
 def gerar_hash_senha(senha):
     return pwd_context.hash(senha)
@@ -27,7 +32,8 @@ def criar_token_acesso(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        # Mudado aqui para usar a sua variável configurada (ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

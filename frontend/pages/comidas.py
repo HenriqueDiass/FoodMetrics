@@ -144,24 +144,49 @@ with aba_deletar:
             resultado_del = resp.json()
             comidas_del = resultado_del["data"]
             if comidas_del:
-                opcoes_del = {f"ID {c['id']} - {c['nome']}": c['id'] for c in comidas_del}
+                opcoes_del = {f"ID {c['id']} - {c['nome']}": c for c in comidas_del}
                 
                 col_sel, col_btn = st.columns([3, 1])
                 with col_sel:
                     item_del = st.selectbox("Selecione o alimento que deseja deletar:", list(opcoes_del.keys()), key="del_comida_select")
+                
+                # Definição do Modal de Confirmação Crítica
+                @st.dialog("Confirmar Exclusão de Alimento")
+                def modal_confirmar_deletar_comida(comida_dados):
+                    st.warning(f"⚠️ Atenção! Você está prestes a excluir permanentemente um item.")
+                    st.write(f"Deseja realmente deletar o alimento **{comida_dados['nome']}** (Categoria: {comida_dados['categoria']})?")
+                    
+                    col_modal_cancel, col_modal_conf = st.columns(2)
+                    with col_modal_cancel:
+                        if st.button("Cancelar", use_container_width=True):
+                            st.rerun() # Fecha o modal sem executar nada
+                    with col_modal_conf:
+                        if st.button("Confirmar Exclusão", type="primary", use_container_width=True):
+                            try:
+                                # CONFIGURAÇÃO DO TOKEN DE AUTENTICAÇÃO (O que estava faltando)
+                                headers = {}
+                                if "token" in st.session_state:
+                                    headers["Authorization"] = f"Bearer {st.session_state.token}"
+                                
+                                # Enviando a requisição passando os headers configurados
+                                res_del = requests.delete(f"{API_COMIDAS}/{comida_dados['id']}", headers=headers)
+                                
+                                if res_del.status_code == 204:
+                                    st.success(f"✅ {comida_dados['nome']} deletado com sucesso!")
+                                    st.rerun() 
+                                elif res_del.status_code == 401:
+                                    st.error("🚨 Erro de Autenticação: Usuário não autorizado ou token expirado.")
+                                else:
+                                    st.error("Erro ao deletar. O alimento pode estar vinculado a um registro de desperdício.")
+                            except requests.exceptions.RequestException:
+                                st.error("🚨 Erro de conexão.")
+
                 with col_btn:
                     st.write("") 
                     st.write("")
                     if st.button("Deletar Selecionado", use_container_width=True, type="primary"):
-                        try:
-                            res_del = requests.delete(f"{API_COMIDAS}/{opcoes_del[item_del]}")
-                            if res_del.status_code == 204:
-                                st.success("Deletado com sucesso!")
-                                st.rerun()  
-                            else:
-                                st.error("Erro ao deletar. O alimento pode estar vinculado a um registro de desperdício.")
-                        except requests.exceptions.RequestException:
-                            st.error("🚨 Erro de conexão.")
+                        comida_selecionada = opcoes_del[item_del]
+                        modal_confirmar_deletar_comida(comida_selecionada)
             else:
                 st.info("Nenhum alimento cadastrado para deletar.")
         else:
