@@ -109,7 +109,7 @@ def tela_login():
                             # NOTA: Mesmo sendo o e-mail do usuário, a chave AQUI precisa 
                             # continuar como "username" para o FastAPI aceitar.
                             response = requests.post(
-                                "http://127.0.0.1:8000/token",
+                                "https://foodmetrics-production.up.railway.app/token",
                                 data={"username": usuario, "password": senha}
                             )
                             

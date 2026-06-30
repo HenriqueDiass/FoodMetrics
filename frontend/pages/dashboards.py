@@ -12,7 +12,7 @@ bloqueio_api_offline()
 st.title("📊 Dashboard do Restaurante")
 
 PALETA = ["#123258", "#2a91d3", "#53a458", "#50626e"]
-API_DESPERDICIOS = "http://127.0.0.1:8000/desperdicios"
+API_DESPERDICIOS = "https://foodmetrics-production.up.railway.app/desperdicios"
 
 resposta = requests.get(API_DESPERDICIOS, params={"limit": 10000})
 

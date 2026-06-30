@@ -130,7 +130,7 @@ def tela_cadastro():
                     else:
                         try:
                             # 1. Definir a URL da sua API
-                            api_url = "http://127.0.0.1:8000/usuarios"
+                            api_url = "https://foodmetrics-production.up.railway.app/usuarios"
                             
                             # 2. Montar o payload (corpo da requisição) igual ao esperado pelo FastAPI
                             payload = {
